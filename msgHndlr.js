@@ -38,7 +38,6 @@ let antibadword = JSON.parse(fs.readFileSync('./settings/antibadword.json'))
 const afk = JSON.parse(fs.readFileSync('./lib/afk.json'))
 const daftar = JSON.parse(fs.readFileSync('./lib/daftar.json'))
 const { ind, eng } = require('./lib/text')
-const { yta, ytv, buffer2Stream, ytsr, baseURI, stream2Buffer, noop } = require('./lib/ytdl')
 const bent = require('bent')
 var request = require('request');
 const rugaapi = require('./lib/rugaapi')
@@ -597,35 +596,7 @@ module.exports = msgHandler = async (client, message) => {
         if (isBlocked) return
         switch(command) {
 
-        case '#nyanyi':
-        case '#play':
-            if (!isPrem) return client.reply(from, `${ubah}Perintah ini hanya untuk user premium! hubungi owner untuk upgrade premium atau ketik #owner${ubah}`, id)
-            if (args.length === 1) return client.reply(from, 'Kirim perintah #nyanyi Judul lagu yang akan dicari', id)
-            const playy = await get.get(`http://nczcha-apii.herokuapp.com/ytsearch?q=${encodeURIComponent(body.slice(8))}`).json()
-            const mulaikah = playy.result[0].url
-            try {
-                client.reply(from, mess.wait, id)
-                yta(mulaikah)
-                .then((res) => {
-                    const { dl_link, thumb, title, filesizeF, filesize } = res
-                    axios.get(`https://tinyurl.com/api-create.php?url=${dl_link}`)
-                    .then(async (a) => {
-                    if (Number(filesize) >= 30000) return client.sendFileFromUrl(from, thumb, `thumb.jpg`, `Data Berhasil Didapatkan!\n\n*Title* : ${title}\n*Ext* : MP3\n*Filesize* : ${filesizeF}\n*Link* : ${a.data}\n\n_Untuk durasi lebih dari batas disajikan dalam bentuk link_`, id)
-                    const captions = `Data Berhasil Didapatkan!\n\n*Title* : ${title}\n*Ext* : MP3\n*Size* : ${filesizeF}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
-                    client.sendFileFromUrl(from, thumb, `thumb.jpg`, captions, id)
-                    // INFOLOG(dl_link)
-                    await client.sendFileFromUrl(from, dl_link, `${title}.mp3`, `Audio telah terkirim ${pushname}`, id).catch(() => client.reply(from, mess.error.Yt3, id))
-                    })
-
-                })
-            } catch (err) {
-                client.sendText(ownerNumber, 'Error ytmp3 : '+ err)
-                ERRLOG(err)
-                client.reply(from, mess.error.Yt3, id)
-            }
-            await client.sendSeen(from)
-            break
-
+        
         case '#unmute':
             console.log(`Unmuted ${name}!`)
             await client.sendSeen(from)
@@ -1048,31 +1019,7 @@ module.exports = msgHandler = async (client, message) => {
             });
             break
 
-        case '#musik':
-        case '#music':
-            if (args.length === 1) return client.reply(from, 'Kirim perintah *!musik* _Judul lagu yang akan dicari_')
-            const querr = body.slice(7).toString()
-            client.reply(from, mess.wait, id)
-            try {
-               const jsonsercmu = await get.get(`http://nczcha-apii.herokuapp.com/ytsearch?q=${encodeURIComponent(querr)}`).json()
-                const { result } = await jsonsercmu
-                let berhitung = 1
-                let xixixi = `*Hasil pencarian from ${querr}*\n\n_Note : Apabila kesusahan mengambil data id, untuk download musik tag pesan ini dan berikan perintah : *#getmusik urutan* contoh : *#getmusik 2*_\n`
-                //console.log(result)
-                for (let i = 0; i < result.length; i++) {
-                    xixixi += `\n*Urutan* : ${berhitung+i}\n*Title* : ${result[i].title}\n*Channel* : ${result[i].author}\n*Durasi* : ${result[i].timestamp}\n*Perintah download* : _#getmusik [nomor.urut]_\n ID : ${result[i].id}\n`
-                }
-                    xixixi += `\n\n`
-                for (let ii = 0; ii < result.length; ii++) {
-                    xixixi += `(#)${result[ii].id}`
-                }
-                await client.sendFileFromUrl(from, result[0].thumb, 'thumbserc.jpg', xixixi, id)
-            } catch (err){
-                console.log(err)
-                client.reply(from, `_Kesalahan saat mencari judul lagu ${querr}_`, id)
-            }
-            await client.sendSeen(from)
-            break
+       
         case '#tostiker':
         case '#tosticker':
             if (!isPrem) return client.reply(from, `${ubah}Perintah ini hanya untuk user premium! hubungi owner untuk upgrade premium atau ketik #owner${ubah}`, id)
@@ -1145,112 +1092,7 @@ module.exports = msgHandler = async (client, message) => {
                      console.log(error)
                  }
             await client.sendSeen(from)
-            break;  
-
-        case '#getmusik':
-        case '#getmusic':
-            if (!isPrem) return client.reply(from, `${ubah}Perintah ini hanya untuk user premium! hubungi owner untuk upgrade premium atau ketik #owner${ubah}`, id)
-            try {
-                if (quotedMsg && quotedMsg.type == 'image') {
-                    if (args.length === 1) return client.reply(from, 'Kirim perintah *#getmusik _IdDownload_*, untuk contoh silahkan kirim perintah *!readme*')
-                    if (!Number(args[1])) return client.reply(from, `_Apabila ditag hanya cantumkan nomer urutan bukan ID Download!_  contoh : *!getmusik _1_*`, id)
-                    const dataDownmp3 = quotedMsg.type == 'chat' ? quotedMsg.body : quotedMsg.type == 'image' ? quotedMsg.caption : ''
-                    const pilur = dataDownmp3.split('(#)')
-                    client.reply(from, mess.wait, id)
-                    
-                    yta(`https://youtube.com/watch?v=${pilur[args[1]]}`)
-                    .then((res) => {
-                        const { dl_link, thumb, title, filesizeF, filesize } = res
-                        axios.get(`https://tinyurl.com/api-create.php?url=${dl_link}`)
-                        .then((a) => {
-                        if (Number(filesize) >= 30000) return client.sendFileFromUrl(from, thumb, `thumb.jpg`, `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Filesize* : ${filesizeF}\n*Link* : ${a.data}\n\n_Untuk durasi lebih dari batas disajikan dalam bentuk link_`, id)
-                        const captions = `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Size* : ${filesizeF}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
-                        client.sendFileFromUrl(from, thumb, `thumb.jpg`, captions, id)
-                        client.sendFileFromUrl(from, dl_link, `${title}.mp3`, `Audio telah terkirim ${pushname}`, id).catch(() => client.reply(from, mess.error.Yt3, id))
-                        })
-                    }).catch((e) => {
-                        console.log(e)
-                        client.reply('Kesalahan saat mendownload data yg dipilih! pastikan id from perintah *!musik* sudah benar.')
-                    })
-
-                } else if (quotedMsg && quotedMsg.type == 'chat') { 
-                    client.reply(from, `_Salah tag! hanya tag pesan berisi data hasil from penelusuran musik._`, id)
-                } else if (body.type == 'chat'){
-                    client.reply(from, `_Mohon tag pesan tentang penelusuran musik!_`, id)
-                } else {
-                    if (args.length === 1) return client.reply(from, 'Kirim perintah *#getmusik _IdDownload_*, untuk contoh silahkan kirim perintah *!readme*')
-                    if (args[1] <= 25) return client.reply(from, `_Apabila ingin mengambil data musik dengan nomor urutan, mohon tag pesan bot tentang pencarian musik!_`,)
-                    client.reply(from, mess.wait, id)
-                    yta(`https://youtu.be/${args[1]}`)
-                    .then((res) => {
-                        const { dl_link, thumb, title, filesizeF, filesize } = res
-                        axios.get(`https://tinyurl.com/api-create.php?url=${dl_link}`)
-                        .then((a) => {
-                        if (Number(filesize) >= 30000) return client.sendFileFromUrl(from, thumb, `thumb.jpg`, `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Filesize* : ${filesizeF}\n*Link* : ${a.data}\n\n_Untuk durasi lebih dari batas disajikan dalam bentuk link_`, id)
-                        const captions = `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Size* : ${filesizeF}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
-                        client.sendFileFromUrl(from, thumb, `thumb.jpg`, captions, id)
-                        client.sendFileFromUrl(from, dl_link, `${title}.mp3`, `Audio telah terkirim ${pushname}`, id).catch(() => client.reply(from, mess.error.Yt3, id))
-                        })
-                    })
-                }
-            } catch (err) {
-                client.sendText(ownerNumber, 'Error ytmp3 : '+ err)
-                client.reply(from, `_Kesalahan! Pastikan id download sudah benar._`, id)
-                console.log(err)
-            }
-            await client.sendSeen(from)
-            break
-
-        case '#getvideo':
-        case '#getvidio':
-                if (!isdaftar) return client.reply(from, `*NOMOR KAMU BELUM TERDAFTAR DI RIDHO BOT* \n\n*SILAHKAN LAKUKAN PENDAFTARAN DENGAN CARA KETIK* \n\n#daftar nomor|nama|umur \n\nCONTOH : \n\n#daftar 6281289096745|ridho|17 \n\n*_PENULISAN NOMOR HARUS MENGGUNAKAN 62812XXXXX_*`, id)        
-                if (!isGroupMsg) return client.reply(from, 'Perintah ini hanya bisa di gunakan dalam group!', id)
-                if (!isPrem) return client.reply(from, 'Maaf, perintah ini hanya dapat dilakukan oleh user premium, untuk upgrade hubungi owner ketik *_#owner_*', id)  
-            if (args.length === 1) return client.reply(from, 'Kirim perintah *#getvideo* _IdDownload_, untuk contoh silahkan kirim perintah *!readme*', id)
-            try {    
-            if (quotedMsg && quotedMsg.type == 'image') {
-                if (!Number(args[1])) return client.reply(from, `_Apabila ditag hanya cantumkan nomer urutan bukan ID Download!_  contoh : *!getvideo _1_*`, id)
-                const dataDownmp3 = quotedMsg.type == 'chat' ? quotedMsg.body : quotedMsg.type == 'image' ? quotedMsg.caption : ''
-                const pilur = dataDownmp3.split('(#)')
-                console.log(pilur[args[1]])
-                client.reply(from, mess.wait, id)
-                ytv(`https://youtu.be/${pilur[args[1]]}`)
-                    .then((res) => {
-                        // console.log(res)
-                        const { dl_link, thumb, title, filesizeF, filesize } = res
-                        axios.get(`https://tinyurl.com/api-create.php?url=${dl_link}`)
-                        .then((a) => {
-                        if (Number(filesize) >= 40000) return client.sendFileFromUrl(from, thumb, `thumb.jpg`, `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Filesize* : ${filesizeF}\n*Link* : ${a.data}\n\n_Untuk durasi lebih dari batas disajikan dalam bentuk link_`, id)
-                        const captions = `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Size* : ${filesizeF}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
-                        client.sendFileFromUrl(from, thumb, `thumb.jpg`, captions, id)
-                        client.sendFileFromUrl(from, dl_link, `${title}.mp4`, `Video telah terkirim ${pushname}`, id).catch(() => client.reply(from, mess.error.Yt3, id))
-                        })
-
-                    })
-                 
-            } else if (quotedMsg && quotedMsg.type == 'chat') { 
-                    client.reply(from, `_Salah tag cok! hanya tag pesan berisi data hasil from penelusuran video._`, id)
-            } else {
-                if (args.length === 1) return client.reply(from, 'Kirim perintah *#getvideo _Id Video_*, untuk contoh silahkan kirim perintah *#readme*')
-                if (args[1] <= 25) return client.reply(from, `_Apabila ingin mengambil data video dengan nomor urutan, mohon tag pesan bot tentang pencarian video!_`,)
-                client.reply(from, mess.wait, id)
-                ytv(`https://youtu.be/${args[1]}`)
-                    .then((res) => {
-                        const { dl_link, thumb, title, filesizeF, filesize } = res
-                        axios.get(`https://tinyurl.com/api-create.php?url=${dl_link}`)
-                        .then((a) => {
-                        if (Number(filesize) >= 30000) return client.sendFileFromUrl(from, thumb, `thumb.jpg`, `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Filesize* : ${filesizeF}\n*Link* : ${a.data}\n\n_Untuk durasi lebih dari batas disajikan dalam bentuk link_`, id)
-                        const captions = `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP4\n*Size* : ${filesizeF}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
-                        client.sendFileFromUrl(from, thumb, `thumb.jpg`, captions, id)
-                        client.sendFileFromUrl(from, dl_link, `${title}.mp4`, `Video telah terkirim ${pushname}`, id).catch(() => client.reply(from, mess.error.Yt3, id))
-                        })
-                    })
-                }
-            } catch (err) {
-                client.sendText(ownerNumber, 'Error getvid4 : '+ err)
-                client.reply(from, mess.error.Yt4, id)
-            }
-            break
+            break; 
 
 
         case '#cowo':
@@ -1376,59 +1218,7 @@ ${desc}`)
             }
             break*/
 
-        case '#ytmp4':
-            if (!isPrem) return client.reply(from, `${ubah}Perintah ini hanya untuk user premium! hubungi owner untuk upgrade premium atau ketik #owner${ubah}`, id)
-            if (args.length === 1) return client.reply(from, 'Kirim perintah *!ytmp4* _linkYt_, untuk contoh silahkan kirim perintah *!readme*', id)
-            let isLinks2 = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
-            if (!isLinks2) return client.reply(from, mess.error.Iv, id)
-            try {
-                client.reply(from, mess.wait, id)
-                ytv(args[1])
-                .then((res) => {
-                    const { dl_link, thumb, title, filesizeF, filesize } = res
-                    axios.get(`https://tinyurl.com/api-create.php?url=${dl_link}`)
-                    .then((a) => {
-                    if (Number(filesize) >= 40000) return client.sendFileFromUrl(from, thumb, `thumb.jpg`, `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Filesize* : ${filesizeF}\n*Link* : ${a.data}\n\n_Untuk durasi lebih dari batas disajikan dalam bentuk link_`, id)
-                    const captionsYtmp4 = `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Size* : ${filesizeF}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
-                    client.sendFileFromUrl(from, thumb, `thumb.jpg`, captionsYtmp4, id)
-                    client.sendFileFromUrl(from, dl_link, `${title}.mp3`, `Video telah terkirim ${pushname}`, id).catch(() => client.reply(from, mess.error.Yt3, id))
-                    })
-
-                })
-            } catch (err) {
-                client.sendText(ownerNumber, 'Error ytmp4 : '+ err)
-                await client.reply(from, mess.error.Yt4, id)
-                ERRLOG(err)
-            }
-            await client.sendSeen(from)
-            break
-
-        case '#ytmp3':
-            if (!isPrem) return client.reply(from, `${ubah}Perintah ini hanya untuk user premium! hubungi owner untuk upgrade premium atau ketik #owner${ubah}`, id)
-            if (args.length === 1) return client.reply(from, 'Kirim perintah *#ytmp3 [linkYt]*, untuk contoh silahkan kirim perintah *!readme*')
-            let isLinks = args[1].match(/(?:https?:\/{2})?(?:w{3}\.)?youtu(?:be)?\.(?:com|be)(?:\/watch\?v=|\/)([^\s&]+)/)
-            if (!isLinks) return client.reply(from, mess.error.Iv, id)
-            try {
-                client.reply(from, mess.wait, id)
-                yta(args[1])
-                .then((res) => {
-                    const { dl_link, thumb, title, filesizeF, filesize } = res
-                    axios.get(`https://tinyurl.com/api-create.php?url=${dl_link}`)
-                    .then((a) => {
-                    if (Number(filesize) >= 30000) return client.sendFileFromUrl(from, thumb, `thumb.jpg`, `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Filesize* : ${filesizeF}\n*Link* : ${a.data}\n\n_Untuk durasi lebih dari batas disajikan dalam bentuk link_`, id)
-                    const captions = `*Data Berhasil Didapatkan!*\n\n*Title* : ${title}\n*Ext* : MP3\n*Size* : ${filesizeF}\n\n_Silahkan tunggu file media sedang dikirim mungkin butuh beberapa menit_`
-                    client.sendFileFromUrl(from, thumb, `thumb.jpg`, captions, id)
-                    client.sendFileFromUrl(from, dl_link, `${title}.mp3`, `Audio telah terkirim ${pushname}`, id).catch(() => client.reply(from, mess.error.Yt3, id))
-                    })
-
-                })
-            } catch (err) {
-                client.sendText(ownerNumber, 'Error ytmp3 : '+ err)
-                ERRLOG(err)
-                client.reply(from, mess.error.Yt3, id)
-            }
-            await client.sendSeen(from)
-            break   
+    
 
         /*case '#play':
             if (!isPrem) return client.reply(from, `${ubah}Perintah ini hanya untuk user premium! hubungi owner untuk upgrade premium atau ketik #owner${ubah}`, id)
@@ -2259,28 +2049,7 @@ ${desc}`)
             await client.sendSeen(from)
             break   
 
-        case '#video':
-        case '#vidio':
-                if (args.length === 1) return client.reply(from, 'Kirim perintah *#video* _Judul video yang akan dicari_')
-            const querv = body.slice(7)
-            client.reply(from, mess.wait, id)
-            try {
-                const jsonsercmuv = await get.get(`http://nczcha-apii.herokuapp.com/ytsearch?q=${encodeURIComponent(querv)}`).json()
-                const { result } = await jsonsercmuv
-                let xixixai = `*Hasil pencarian from ${querv}*\n\n_Note : Apabila kesusahan mengambil data id, untuk download video tag pesan ini dan berikan perintah : *#getvideo urutan* contoh : *#getvideo 2*_\n`
-                for (let i = 0; i < result.length; i++) {
-                    xixixai += `\n*Urutan* : ${i+1}\n*Title* : ${result[i].title}\n*Channel* : ${result[i].author}\n*Durasi* : ${result[i].timestamp}\n*Perintah download* : _#getvideo [no.urut]_\n ID :${result[i].id}\n`
-                }
-                    xixixai += `\n\n`
-                for (let ii = 0; ii < result.length; ii++) {
-                    xixixai += `(#)${result[ii].id}`
-                }
-                await client.sendFileFromUrl(from, result[0].thumb, 'thumbserc.jpg', xixixai, id)
-            } catch (err){
-                console.log(err)
-            }
-            await client.sendSeen(from)
-            break
+        
 
         case '#playstore':
             if (!isPrem) return client.reply(from, `${ubah}Perintah ini hanya untuk user premium! hubungi owner untuk upgrade premium atau ketik #owner${ubah}`, id) 
